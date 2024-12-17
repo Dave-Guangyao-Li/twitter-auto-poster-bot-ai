@@ -24,8 +24,23 @@ async function run() {
   });
 
   // Write your prompt here
-  const prompt =
-    "generate a web development content, tips and tricks or something new or some rant or some advice as a tweet, it should not be vague and should be unique; under 280 characters and should be plain text, you can use emojis";
+  const prompt = `
+  Generate a tweet under 280 characters that covers one of the following technical topics:
+  - AI concepts, trends, or advice
+  - General computer science knowledge or programming wisdom
+  - JavaScript tips, Python tricks, or debugging advice
+  - Frontend development topics (React, CSS, Next.js, etc.)
+  - Development pitfalls and how to avoid them
+  - Productivity tips for developers or coding advice
+  
+  The tweet should:
+  1. Be concise, clear, and engaging.
+  2. Include unique insights, tips, or solutions.
+  3. Avoid vagueness and generic statements.
+  4. Use plain text with occasional emojis for emphasis (but no hashtags or links).
+  
+  Write it in an informal, friendly, and encouraging tone suitable for developers of all levels.
+  `;
 
   const result = await model.generateContent(prompt);
   const response = await result.response;
