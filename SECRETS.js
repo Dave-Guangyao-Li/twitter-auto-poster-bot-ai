@@ -17,5 +17,3 @@ const SECRETS = {
 };
 
 module.exports = SECRETS;
-
-export default SECRETS;
