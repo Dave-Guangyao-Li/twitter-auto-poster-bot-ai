@@ -30,98 +30,121 @@ async function sendThreadTweet(tweetTexts) {
   }
 }
 
+const TOPIC_CATEGORIES = [
+  "Frontend",
+  "Backend",
+  "Database",
+  "Generative AI",
+  "Cloud Computing",
+  "DevOps",
+  "Machine Learning",
+  "Cybersecurity",
+  "Mobile Development",
+  "Data Science"
+];
+
+function generateDynamicPrompt(topicCategory) {
+  return `
+Generate a technical thread about ${topicCategory} technologies.
+
+Guidelines:
+- Choose ONE specific, innovative subtopic within ${topicCategory}
+- Provide deep, actionable technical insights
+- Aim for senior technical professionals
+- Avoid generic statements
+- Be creative and forward-looking
+
+Structural Recommendations:
+- Start with a provocative thesis
+- Progressively explore technical nuances
+- Conclude with forward-looking implications
+`;
+}
+
+const TOPIC_CONFIGS = TOPIC_CATEGORIES.map(category => ({
+  name: category,
+  promptGenerator: () => generateDynamicPrompt(category)
+}));
+
+let lastSelectedTopicIndex = -1;
+
+function selectTopicWithVariety() {
+  const availableTopics = TOPIC_CONFIGS.length;
+
+  // If only one topic exists, return it
+  if (availableTopics === 1) return TOPIC_CONFIGS[0];
+
+  let selectedIndex;
+  do {
+    // Truly random selection
+    selectedIndex = Math.floor(Math.random() * availableTopics);
+  } while (selectedIndex === lastSelectedTopicIndex && availableTopics > 1);
+
+  lastSelectedTopicIndex = selectedIndex;
+  return TOPIC_CONFIGS[selectedIndex];
+}
+
 async function run(testMode = false) {
+  // Select topic dynamically
+  const selectedTopic = selectTopicWithVariety();
+  console.log(`Selected Topic: ${selectedTopic.name}`);
+
+  // Generate dynamic prompt
+  const dynamicPrompt = selectedTopic.promptGenerator();
+
   // For text-only input, use the gemini-pro model
   const model = genAI.getGenerativeModel({
     model: "gemini-1.5-pro",
     generationConfig,
   });
 
-  const prompt = `
-Advanced Technical Discourse Generator - Multi-Shot Approach
+  try {
+    const result = await model.generateContent(dynamicPrompt);
+    const response = await result.response;
+    const fullText = response.text();
 
-Objective: Create a technically sophisticated, multi-tweet thread exploring a cutting-edge software engineering concept.
+    // Split text into thread-friendly tweets
+    const tweets = fullText.split('\n')
+      .filter(tweet => tweet.trim().length > 0 &&
+        !tweet.match(/^(Tweet \d+|Guidelines|Structural|Recommendations)/i))
+      .map(tweet => tweet.length > 280
+        ? tweet.substring(0, 277) + '...'
+        : tweet
+      )
+    // .slice(0, 5);  // Limit to 5 tweets
 
-Thread Structure Guidelines:
-1. Thread Opener (Tweet 1):
-   - Provocative thesis or core concept
-   - Capture attention with a bold technical insight
-   - Set the stage for deeper exploration
+    // Logging for debugging
+    console.log(`Generated ${tweets.length} tweets`);
 
-2. Subsequent Tweets:
-   - Each tweet should focus on a specific subtopic
-   - Provide concrete technical insights
-   - Use precise, jargon-appropriate language
-   - Avoid redundant headers or numbering
-
-Focus Areas (CHOOSE ONE):
-1. Frontend Engineering Best Practices
-2. Generative AI & Large Language Models concepts and trends
-3. Modern JavaScript/React features
-4. Python Advanced Techniques
-
-Specific Requirements:
-- Maximum 280 characters per tweet
-- Technical depth over breadth
-- No redundant headers like "Tweet 1:" or "Tweet 2:"
-- Maintain a cohesive narrative across tweets
-- Target senior developers and tech enthusiasts
-
-Tone:
-- Authoritative
-- Analytical
-- Intellectually rigorous
-- Precise technical communication
-
-Subtopic Exploration Strategy:
-- 1: Overarching concept
-- 2: Technical mechanism
-- 3: Implementation insights
-- 4: Advanced implications
-- 5: Future trends or critical analysis
-
-Example Thread Structure (DO NOT COPY):
-1: "Reactive programming paradigms are transforming how we conceptualize state management in modern web applications."
-2: "Key mechanism: Unidirectional data flow ensures predictable state transitions and simplifies complex UI interactions."
-3: "Implementation: Leverage RxJS observables to create composable, declarative data streams that react to user events."
-4: "Advanced pattern: Combine reactive streams with memoization to optimize performance in real-time data synchronization."
-5: "Future outlook: Reactive programming will be integral to building scalable, responsive, and maintainable frontend architectures."
-
-Desired Outcome:
-Generate a technically precise, engaging thread that provides deep insights into a sophisticated software engineering concept.
-`;
-
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  const fullText = response.text();
-
-  // Split text into thread-friendly tweets
-  const tweets = fullText.split('\n')
-    .filter(tweet => tweet.trim().length > 0 && !tweet.startsWith('Tweet '))
-    .map(tweet => tweet.length > 280
-      ? tweet.substring(0, 277) + '...'
-      : tweet
-    )
-  // .slice(0, 5);  // Limit to 5 tweets max
-
-  // Log tweets or send as a thread based on mode
-  if (testMode) {
-    console.log("🧪 Test Mode - Generated Tweets:");
-    tweets.forEach((tweet, index) => {
-      console.log(`Tweet ${index + 1} (${tweet.length} chars):`);
-      console.log(tweet);
-      console.log('---');
-    });
-    return tweets;
-  } else {
-    // Send as a thread
-    await sendThreadTweet(tweets);
+    // Log tweets or send as a thread based on mode
+    if (testMode) {
+      console.log("🧪 Test Mode - Generated Tweets:");
+      tweets.forEach((tweet, index) => {
+        console.log(`Tweet ${index + 1} (${tweet.length} chars):`);
+        console.log(tweet);
+        console.log('---');
+      });
+      return tweets;
+    } else {
+      // Send as a thread
+      await sendThreadTweet(tweets);
+      console.log("Tweets sent successfully to X/Twitter");
+    }
+  } catch (error) {
+    console.error("Error generating or sending tweets:", error);
+    throw error;
   }
 }
 
-// Allow local testing
+// Ensure the script works both as a module and when run directly
 if (require.main === module) {
   (async () => {
-    await run(true);  // Run in test mode
+    try {
+      // Run in production mode when executed directly
+      await run(true);
+    } catch (error) {
+      console.error("Script execution failed:", error);
+      process.exit(1);
+    }
   })();
 }
