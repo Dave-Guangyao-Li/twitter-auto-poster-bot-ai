@@ -16,6 +16,20 @@ const generationConfig = {
 };
 const genAI = new GenAI.GoogleGenerativeAI(SECRETS.GEMINI_API_KEY);
 
+async function sendThreadTweet(tweetTexts) {
+  try {
+    let previousTweetId = null;
+    for (const [index, text] of tweetTexts.entries()) {
+      const tweetOptions = index > 0 ? { reply: { in_reply_to_tweet_id: previousTweetId } } : {};
+      const tweet = await twitterClient.v2.tweet(text, tweetOptions);
+      previousTweetId = tweet.data.id;
+    }
+    console.log("Thread sent successfully!");
+  } catch (error) {
+    console.error("Error sending thread:", error);
+  }
+}
+
 async function run() {
   // For text-only input, use the gemini-pro model
   const model = genAI.getGenerativeModel({
@@ -23,52 +37,62 @@ async function run() {
     generationConfig,
   });
 
-  // Write your prompt here
   const prompt = `
-  Generate a unique, engaging tweet about software development, focusing on:
-  
-  Constraints:
-  - Maximum 280 characters
-  - Avoid starting with "Remember" or repeating previous tweet structures
-  - Use a fresh, dynamic perspective
-  - Include a thought-provoking insight or unexpected angle
-  
-  Possible Approaches (Choose ONE):
-  1. A counterintuitive debugging tip
-  2. A metaphorical explanation of a complex tech concept
-   3. A personal growth lesson from a coding challenge
-  4. An unexpected connection between coding and life
-  5. A provocative question about software development
-  
-  Tone:
-  - Authentic
-  - Slightly witty
-  - Professionally conversational
-  - Avoid clichés
-  
-  Goal: Spark curiosity, provoke thought, or offer a unique perspective on tech and development.
-  
-  Example Styles (But Don't Copy):
-  - "What if bugs are actually... opportunities in disguise? 🐞🚀"
-  - "Code is poetry written in logic. Some lines sing, some whisper. 💻✨"
-  
-  Bonus: Subtle emoji use is encouraged, but don't overdo it.
-  `;
+Advanced Technical Discourse Generator:
+
+Focus Areas (CHOOSE ONE):
+1. Frontend Engineering Paradigms
+2. Generative AI & Large Language Models
+3. Modern JavaScript/React Best Practices
+4. Python Advanced Techniques
+
+Technical Discourse Requirements:
+- Provide deep, nuanced technical insights
+- Demonstrate advanced understanding
+- Avoid surface-level explanations
+- Target senior developers and tech enthusiasts
+
+Structural Guidelines:
+- Generate content that can be naturally split into a thread
+- First tweet: Provocative thesis or core concept
+- Subsequent tweets: Detailed exploration, code snippets, or critical analysis
+- Maintain technical depth and precision
+- No casual language or unnecessary emojis
+
+Tone:
+- Authoritative
+- Analytical
+- Intellectually rigorous
+- Precise technical communication
+
+Specific Constraints:
+- Maximum 280 characters per tweet
+- Prioritize technical accuracy
+- Include potential code patterns or architectural insights
+- Highlight emerging trends or critical considerations
+
+Example Approach:
+"Exploring the architectural evolution of React state management: From Redux to React Query - a paradigm shift in data synchronization strategies."
+
+Desired Outcome:
+A technically sophisticated, multi-tweet exploration of a cutting-edge software engineering concept.
+`;
 
   const result = await model.generateContent(prompt);
   const response = await result.response;
-  const text = response.text();
-  console.log(text);
-  sendTweet(text);
+  const fullText = response.text();
+
+  // Split text into thread-friendly tweets
+  const tweets = fullText.split('\n\n')
+    .filter(tweet => tweet.trim().length > 0)
+    .map(tweet => tweet.length > 280
+      ? tweet.substring(0, 277) + '...'
+      : tweet
+    )
+    .slice(0, 5);  // Limit to 5 tweets max
+
+  // Send as a thread
+  await sendThreadTweet(tweets);
 }
 
 run();
-
-async function sendTweet(tweetText) {
-  try {
-    await twitterClient.v2.tweet(tweetText);
-    console.log("Tweet sent successfully!");
-  } catch (error) {
-    console.error("Error sending tweet:", error);
-  }
-}
