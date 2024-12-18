@@ -84,6 +84,33 @@ function selectTopicWithVariety() {
   return TOPIC_CONFIGS[selectedIndex];
 }
 
+function splitLongTweet(tweet) {
+  // If tweet is short enough, return as is
+  if (tweet.length <= 280) return [tweet];
+
+  // Split intelligently by sentences
+  const sentences = tweet.match(/[^.!?]+[.!?]+/g) || [tweet];
+  const tweets = [];
+  let currentTweet = '';
+
+  sentences.forEach(sentence => {
+    // If adding this sentence would exceed 280, start a new tweet
+    if ((currentTweet + sentence).length > 280) {
+      tweets.push(currentTweet.trim());
+      currentTweet = sentence;
+    } else {
+      currentTweet += sentence;
+    }
+  });
+
+  // Add the last tweet
+  if (currentTweet.trim()) {
+    tweets.push(currentTweet.trim());
+  }
+
+  return tweets;
+}
+
 async function run(testMode = false) {
   // Select topic dynamically
   const selectedTopic = selectTopicWithVariety();
@@ -103,31 +130,30 @@ async function run(testMode = false) {
     const response = await result.response;
     const fullText = response.text();
 
-    // Split text into thread-friendly tweets
-    const tweets = fullText.split('\n')
+    // Process tweets
+    const rawTweets = fullText.split('\n')
       .filter(tweet => tweet.trim().length > 0 &&
         !tweet.match(/^(Tweet \d+|Guidelines|Structural|Recommendations)/i))
-      .map(tweet => tweet.length > 280
-        ? tweet.substring(0, 277) + '...'
-        : tweet
-      )
-    // .slice(0, 5);  // Limit to 5 tweets
+      .map(tweet => tweet.replace(/\*+/g, '')); // Remove redundant asterisks
+
+    // Flatten tweets that might be longer than 280 characters
+    const processedTweets = rawTweets.flatMap(splitLongTweet);
 
     // Logging for debugging
-    console.log(`Generated ${tweets.length} tweets`);
+    console.log(`Generated ${processedTweets.length} tweets`);
 
     // Log tweets or send as a thread based on mode
     if (testMode) {
       console.log("🧪 Test Mode - Generated Tweets:");
-      tweets.forEach((tweet, index) => {
+      processedTweets.forEach((tweet, index) => {
         console.log(`Tweet ${index + 1} (${tweet.length} chars):`);
         console.log(tweet);
         console.log('---');
       });
-      return tweets;
+      return processedTweets;
     } else {
       // Send as a thread
-      await sendThreadTweet(tweets);
+      await sendThreadTweet(processedTweets);
       console.log("Tweets sent successfully to X/Twitter");
     }
   } catch (error) {
@@ -141,7 +167,7 @@ if (require.main === module) {
   (async () => {
     try {
       // Run in production mode when executed directly
-      await run(false);
+      await run(true);
     } catch (error) {
       console.error("Script execution failed:", error);
       process.exit(1);
