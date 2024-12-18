@@ -167,7 +167,7 @@ if (require.main === module) {
   (async () => {
     try {
       // Run in production mode when executed directly
-      await run(true);
+      await run(false);
     } catch (error) {
       console.error("Script execution failed:", error);
       process.exit(1);
