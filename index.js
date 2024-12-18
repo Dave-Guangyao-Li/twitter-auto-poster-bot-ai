@@ -32,32 +32,49 @@ async function sendThreadTweet(tweetTexts) {
 
 const TOPIC_CATEGORIES = [
   "Frontend",
+  "UX/UI",
+  "JavaScript",
+  "Python",
   "Backend",
+  "Agentic System",
   "Database",
   "Generative AI",
+  "Large Language Models",
   "Cloud Computing",
   "DevOps",
   "Machine Learning",
   "Cybersecurity",
   "Mobile Development",
-  "Data Science"
+  "Data Science",
+  "Blockchain",
+  "Artificial Intelligence",
+  "Fitness",
+  "Personal Development",
+  "Productivity",
+  "Leadership",
+  "Creativity",
+  "Motivation",
+  "Relationships",
+  "Health",
+  "Mental Health",
+  "Entrepreneurship",
+  "ReactJS",
 ];
 
 function generateDynamicPrompt(topicCategory) {
   return `
-Generate a technical thread about ${topicCategory} technologies.
+Generate a thread about ${topicCategory}.
 
 Guidelines:
 - Choose ONE specific, innovative subtopic within ${topicCategory}
-- Provide deep, actionable technical insights
-- Aim for senior technical professionals
-- Avoid generic statements
+- Provide deep, actionable insights
 - Be creative and forward-looking
 
-Structural Recommendations:
-- Start with a provocative thesis
-- Progressively explore technical nuances
-- Conclude with forward-looking implications
+Structural:
+- Start with a clear and concise topic
+- Follow the thread with a sequence of 3-5 tweets
+
+
 `;
 }
 
@@ -167,7 +184,7 @@ if (require.main === module) {
   (async () => {
     try {
       // Run in production mode when executed directly
-      await run(false);
+      await run(true);
     } catch (error) {
       console.error("Script execution failed:", error);
       process.exit(1);
