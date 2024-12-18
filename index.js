@@ -25,21 +25,34 @@ async function run() {
 
   // Write your prompt here
   const prompt = `
-  Generate a tweet under 280 characters that covers one of the following technical topics:
-  - AI concepts, trends, or advice
-  - General computer science knowledge or programming wisdom
-  - JavaScript tips, Python tricks, or debugging advice
-  - Frontend development topics (React, CSS, Next.js, etc.)
-  - Development pitfalls and how to avoid them
-  - Productivity tips for developers or coding advice
+  Generate a unique, engaging tweet about software development, focusing on:
   
-  The tweet should:
-  1. Be concise, clear, and engaging.
-  2. Include unique insights, tips, or solutions.
-  3. Avoid vagueness and generic statements.
-  4. Use plain text with occasional emojis for emphasis (but no hashtags or links).
+  Constraints:
+  - Maximum 280 characters
+  - Avoid starting with "Remember" or repeating previous tweet structures
+  - Use a fresh, dynamic perspective
+  - Include a thought-provoking insight or unexpected angle
   
-  Write it in an informal, friendly, and encouraging tone suitable for developers of all levels.
+  Possible Approaches (Choose ONE):
+  1. A counterintuitive debugging tip
+  2. A metaphorical explanation of a complex tech concept
+   3. A personal growth lesson from a coding challenge
+  4. An unexpected connection between coding and life
+  5. A provocative question about software development
+  
+  Tone:
+  - Authentic
+  - Slightly witty
+  - Professionally conversational
+  - Avoid clichés
+  
+  Goal: Spark curiosity, provoke thought, or offer a unique perspective on tech and development.
+  
+  Example Styles (But Don't Copy):
+  - "What if bugs are actually... opportunities in disguise? 🐞🚀"
+  - "Code is poetry written in logic. Some lines sing, some whisper. 💻✨"
+  
+  Bonus: Subtle emoji use is encouraged, but don't overdo it.
   `;
 
   const result = await model.generateContent(prompt);
