@@ -30,7 +30,7 @@ async function sendThreadTweet(tweetTexts) {
   }
 }
 
-async function run(testMode = true) {
+async function run(testMode = false) {
   // For text-only input, use the gemini-pro model
   const model = genAI.getGenerativeModel({
     model: "gemini-1.5-pro",
