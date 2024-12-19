@@ -63,18 +63,31 @@ const TOPIC_CATEGORIES = [
 
 function generateDynamicPrompt(topicCategory) {
   return `
-Generate a thread about ${topicCategory}.
+Generate a professional, insightful thread about ${topicCategory}.
 
 Guidelines:
 - Choose ONE specific, innovative subtopic within ${topicCategory}
-- Provide deep, actionable insights
-- Be creative and forward-looking
+- Create exactly 3-5 tweets that form a complete discussion
+- Each tweet should be self-contained but connected
+- Keep each tweet under 280 characters
+- Use varied, engaging openings (avoid repetitive patterns)
+- Include max 2 relevant hashtags per tweet
+- Maintain professional, authoritative tone
+- Focus on insights rather than hype
 
-Structural:
-- Start with a clear and concise topic
-- Follow the thread with a sequence of 3-5 tweets
+Structure (3-5 tweets total):
+1. Introduction: Present a compelling insight or observation
+2-4. Development: Explore implications, examples, or solutions
+5. Conclusion: Provide actionable insight or future perspective
 
+Style Guide:
+- Avoid clickbait phrases ("Forget X", "You won't believe", etc.)
+- Use professional language
+- Balance technical depth with accessibility
+- Keep hashtags relevant and minimal
+- Vary sentence structures and openings
 
+Remember: The entire thread must be complete and coherent within 5 tweets maximum.
 `;
 }
 
@@ -139,7 +152,12 @@ async function run(testMode = false) {
   // For text-only input, use the gemini-pro model
   const model = genAI.getGenerativeModel({
     model: "gemini-1.5-pro",
-    generationConfig,
+    generationConfig: {
+      maxOutputTokens: 400,
+      temperature: 0.8,  // Slightly increased for more creativity
+      topP: 0.9,
+      topK: 40
+    },
   });
 
   try {
@@ -148,18 +166,40 @@ async function run(testMode = false) {
     const fullText = response.text();
 
     // Process tweets
-    const rawTweets = fullText.split('\n')
+    let processedTweets = fullText.split('\n')
       .filter(tweet => tweet.trim().length > 0 &&
-        !tweet.match(/^(Tweet \d+|Guidelines|Structural|Recommendations)/i))
-      .map(tweet => tweet.replace(/\*+/g, '')); // Remove redundant asterisks
+        !tweet.match(/^(Tweet \d+|Guidelines|Style|Structural|Recommendations|Structure|\d+\.|Remember:)/i))
+      .map(tweet => {
+        // Clean up the tweet
+        let cleaned = tweet
+          .replace(/\*+/g, '')  // Remove asterisks
+          .replace(/^\d+\/\d+\s+/, '')  // Remove tweet numbering
+          .trim();
 
-    // Flatten tweets that might be longer than 280 characters
-    const processedTweets = rawTweets.flatMap(splitLongTweet);
+        // Ensure no more than 2 hashtags per tweet
+        const hashtags = cleaned.match(/#\w+/g) || [];
+        if (hashtags.length > 2) {
+          hashtags.slice(2).forEach(tag => {
+            cleaned = cleaned.replace(tag, '');
+          });
+        }
+
+        return cleaned.trim();
+      })
+      .filter(tweet => tweet.length <= 280 && tweet.length > 0);  // Only keep valid tweets
+
+    // Ensure we have at least 3 tweets but no more than 5
+    if (processedTweets.length < 3) {
+      console.log("Generated thread too short, retrying...");
+      return run(testMode);
+    }
+
+    // Take first 5 tweets if we have more
+    processedTweets = processedTweets.slice(0, 5);
 
     // Logging for debugging
     console.log(`Generated ${processedTweets.length} tweets`);
 
-    // Log tweets or send as a thread based on mode
     if (testMode) {
       console.log("🧪 Test Mode - Generated Tweets:");
       processedTweets.forEach((tweet, index) => {
@@ -169,7 +209,6 @@ async function run(testMode = false) {
       });
       return processedTweets;
     } else {
-      // Send as a thread
       await sendThreadTweet(processedTweets);
       console.log("Tweets sent successfully to X/Twitter");
     }
