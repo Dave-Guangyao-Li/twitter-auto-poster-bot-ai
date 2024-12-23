@@ -70,24 +70,34 @@ Guidelines:
 - Create exactly 3-5 tweets that form a complete discussion
 - Each tweet should be self-contained but connected
 - Keep each tweet under 280 characters
-- Use varied, engaging openings (avoid repetitive patterns)
-- Include max 2 relevant hashtags per tweet
+- Include max 2 relevant hashtags per tweet, placed at the end
 - Maintain professional, authoritative tone
-- Focus on insights rather than hype
 
-Structure (3-5 tweets total):
-1. Introduction: Present a compelling insight or observation
-2-4. Development: Explore implications, examples, or solutions
-5. Conclusion: Provide actionable insight or future perspective
+Content Variety:
+- Use diverse opening formats:
+  • Question-based ("What if...")
+  • Statistical ("73% of companies...")
+  • Observation ("In today's landscape...")
+  • Challenge ("Common misconception:")
+  • Insight ("Here's what most miss...")
+  • Quote ("As noted by experts...")
+- Avoid repetitive patterns like "The future of..."
+- Mix short and long sentences for rhythm
 
-Style Guide:
-- Avoid clickbait phrases ("Forget X", "You won't believe", etc.)
-- Use professional language
+Structure (3-5 tweets):
+- First tweet: Hook reader with unique perspective
+- Middle tweets: Build argument with evidence/examples
+- Final tweet: Actionable conclusion or thought-provoking insight
+
+Style Requirements:
+- Write in clear, direct language
+- Focus on current insights, not just future predictions
+- Avoid buzzwords and clichés
+- No numbering or "Tweet X" prefixes
 - Balance technical depth with accessibility
-- Keep hashtags relevant and minimal
-- Vary sentence structures and openings
+- Maintain narrative flow between tweets
 
-Remember: The entire thread must be complete and coherent within 5 tweets maximum.
+Remember: Create a cohesive narrative that engages and informs without relying on formulaic openings or clickbait.
 `;
 }
 
@@ -174,14 +184,17 @@ async function run(testMode = false) {
         let cleaned = tweet
           .replace(/\*+/g, '')  // Remove asterisks
           .replace(/^\d+\/\d+\s+/, '')  // Remove tweet numbering
+          .replace(/^Tweet \d+:\s*/i, '')  // Remove "Tweet X:" format
+          .replace(/^The future of\s+/i, '')  // Remove "The future of" starts
           .trim();
 
         // Ensure no more than 2 hashtags per tweet
         const hashtags = cleaned.match(/#\w+/g) || [];
         if (hashtags.length > 2) {
-          hashtags.slice(2).forEach(tag => {
-            cleaned = cleaned.replace(tag, '');
-          });
+          // Remove all hashtags first
+          cleaned = cleaned.replace(/#\w+/g, '').trim();
+          // Add back only the first two hashtags at the end
+          cleaned = cleaned + ' ' + hashtags.slice(0, 2).join(' ');
         }
 
         return cleaned.trim();
