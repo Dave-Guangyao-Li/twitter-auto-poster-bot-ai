@@ -63,41 +63,38 @@ const TOPIC_CATEGORIES = [
 
 function generateDynamicPrompt(topicCategory) {
   return `
-Generate a professional, insightful thread about ${topicCategory}.
+Generate an engaging, original thread about ${topicCategory}.
 
-Guidelines:
-- Choose ONE specific, innovative subtopic within ${topicCategory}
-- Create exactly 3-5 tweets that form a complete discussion
-- Each tweet should be self-contained but connected
+Core Guidelines:
+- Choose a specific, non-obvious aspect of ${topicCategory}
+- Create 3-5 connected tweets that tell a compelling story
+- Each tweet should spark curiosity and drive engagement
 - Keep each tweet under 280 characters
-- Include max 2 relevant hashtags per tweet, placed at the end
-- Maintain professional, authoritative tone
+- Add 1-2 relevant hashtags naturally within or at the end
 
-Content Variety:
-- Use diverse opening formats:
-  • Question-based ("What if...")
-  • Statistical ("73% of companies...")
-  • Observation ("In today's landscape...")
-  • Challenge ("Common misconception:")
-  • Insight ("Here's what most miss...")
-  • Quote ("As noted by experts...")
-- Avoid repetitive patterns like "The future of..."
-- Mix short and long sentences for rhythm
+Writing Style:
+- Avoid cliché openings ("Ever notice...", "What if...", "Here's why...")
+- Skip formulaic endings ("So next time...", "Remember to...")
+- Write naturally, as if explaining to a colleague
+- Vary sentence structure and rhythm
+- Use concrete examples and metaphors organically
+- Keep technical depth while staying conversational
 
-Structure (3-5 tweets):
-- First tweet: Hook reader with unique perspective
-- Middle tweets: Build argument with evidence/examples
-- Final tweet: Actionable conclusion or thought-provoking insight
+Narrative Techniques:
+- Open with a bold statement, insight, or observation
+- Build tension or curiosity through the thread
+- End with insight that feels earned, not prescriptive
+- Connect ideas smoothly without forced transitions
+- Mix technical depth with relatable context
 
-Style Requirements:
-- Write in clear, direct language
-- Focus on current insights, not just future predictions
-- Avoid buzzwords and clichés
-- No numbering or "Tweet X" prefixes
-- Balance technical depth with accessibility
-- Maintain narrative flow between tweets
+Anti-Patterns to Avoid:
+- No rhetorical questions as openers
+- Avoid "Ever feel like..." or similar starts
+- Skip predictable "So next time..." conclusions
+- Don't use numbered tweet formats (1/4, etc.)
+- Avoid overused transition phrases
 
-Remember: Create a cohesive narrative that engages and informs without relying on formulaic openings or clickbait.
+Remember: Write with authenticity and insight. Make each tweet feel fresh and original, as if part of a natural conversation among experts.
 `;
 }
 
@@ -164,9 +161,10 @@ async function run(testMode = false) {
     model: "gemini-1.5-pro",
     generationConfig: {
       maxOutputTokens: 400,
-      temperature: 0.8,  // Slightly increased for more creativity
-      topP: 0.9,
-      topK: 40
+      temperature: 0.95,    // Even more creativity
+      topP: 0.97,          // Broader vocabulary
+      topK: 60,            // More word choices
+      candidateCount: 2,    // Generate multiple options
     },
   });
 
@@ -236,7 +234,7 @@ if (require.main === module) {
   (async () => {
     try {
       // Run in production mode when executed directly
-      await run(false);
+      await run(true);
     } catch (error) {
       console.error("Script execution failed:", error);
       process.exit(1);
